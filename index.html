@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>stack game</title>
+    <title>색상 스택 퍼즐</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -51,6 +51,7 @@
 </head>
 
 <body>
+    <h1>색상 스택 퍼즐</h1>
     <div id="score">점수: 0</div>
     <button id="addBtn" onclick="addItems()">추가</button>
     <button id="combineBtn" onclick="combineItems()">합성</button>
@@ -58,6 +59,9 @@
     <button id="resetBtn" onclick="resetGame()">초기화</button>
 
     <div class="container" id="gameBoard"></div>
+
+    <input type="text" id="commandInput" placeholder="명령어 입력 후 Enter" onkeypress="handleCommand(event)">
+
     <script>
         const n = 5;
         const colors = ['red', 'blue', 'green', 'yellow', 'purple'];
@@ -207,6 +211,38 @@
                 score = 0
                 updateScore()
                 renderStacks();
+            }
+        }
+
+        function handleCommand(event) {
+            if (event.key === 'Enter') {
+                const command = event.target.value.trim();
+                event.target.value = '';
+                executeCommand(command);
+            }
+        }
+
+        function executeCommand(command) {
+            const parts = command.split(" ");
+            const action = parts[0];
+
+            if (action === "add" || action === "a") {
+                addItems();
+            } else if ((action === "move" || action === "m") && parts.length === 3) {
+                const from = parseInt(parts[1]) - 1;
+                const to = parseInt(parts[2]) - 1;
+                if (!isNaN(from) && !isNaN(to)) {
+                    selectStack(from);
+                    selectStack(to);
+                }
+            } else if (action === "combine" || action === "c") {
+                combineItems();
+            } else if (action === "sort" || action === "s") {
+                sortStacks();
+            } else if (action === "reset" || action === "r") {
+                resetGame();
+            } else {
+                alert('잘못된 명령어입니다')   
             }
         }
 
