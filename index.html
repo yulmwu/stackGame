@@ -1,252 +1,70 @@
 <!DOCTYPE html>
 <html lang="ko">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>색상 스택 퍼즐</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-
-        .container {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .stack {
-            width: 60px;
-            height: 200px;
-            border: 2px solid black;
-            display: flex;
-            flex-direction: column-reverse;
-            cursor: pointer;
-        }
-
-        .stack.selected {
-            border: 2px solid red;
-        }
-
-        .item {
-            width: 100%;
-            height: 20%;
-            border: 1px solid gray;
-        }
-
-        button {
-            margin-top: 10px;
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        #score {
-            font-size: 20px;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-
-<body>
-    <h1>색상 스택 퍼즐</h1>
-    <div id="score">점수: 0</div>
-    <button id="addBtn" onclick="addItems()">추가</button>
-    <button id="combineBtn" onclick="combineItems()">합성</button>
-    <button id="sortBtn" onclick="sortStacks()">정렬</button>
-    <button id="resetBtn" onclick="resetGame()">초기화</button>
-
-    <div class="container" id="gameBoard"></div>
-
-    <input type="text" id="commandInput" placeholder="명령어 입력 후 Enter" onkeypress="handleCommand(event)">
-
-    <script>
-        const n = 5;
-        const colors = ['red', 'blue', 'green', 'yellow', 'purple'];
-        let stacks = Array.from({ length: n }, () => []);
-        let selectedStack = null;
-        let score = 0;
-
-        function updateButtons() {
-            document.getElementById("addBtn").disabled = stacks.every(stack => stack.length >= 5);
-            document.getElementById("combineBtn").disabled = !stacks.some(stack => stack.length === 5 && new Set(stack).size === 1);
-        }
-
-        function updateScore(points) {
-            if (points) score += points;
-            document.getElementById("score").innerText = `점수: ${score}`;
-        }
-
-        function renderStacks() {
-            const board = document.getElementById("gameBoard");
-            board.innerHTML = "";
-            stacks.forEach((stack, index) => {
-                const containerDiv = document.createElement('div');
-
-                const stackDiv = document.createElement("div");
-                stackDiv.classList.add("stack");
-                if (selectedStack === index) stackDiv.classList.add("selected");
-                stackDiv.dataset.index = index;
-                stackDiv.onclick = () => selectStack(index);
-
-                stack.forEach(color => {
-                    const item = document.createElement("div");
-                    item.classList.add("item");
-                    item.style.backgroundColor = color;
-                    stackDiv.appendChild(item);
-                });
-
-                containerDiv.appendChild(stackDiv)
-
-                const label = document.createElement("p");
-                label.textContent = index + 1;
-                containerDiv.appendChild(label)
-
-                board.appendChild(containerDiv);
-            });
-            updateButtons();
-        }
-
-        function addItems() {
-            let items = [];
-            for (let i = 0; i < n - 1; i++) {
-                items.push(colors[Math.floor(Math.random() * colors.length)]);
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>puzzle</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                text-align: center;
             }
 
-            let availableStacks = stacks.filter(stack => stack.length < 5);
-            if (availableStacks.length === 0) return;
-
-            items.forEach(color => {
-                let placed = false;
-                let attempts = 0;
-                while (!placed && attempts < 10) {
-                    let stackIndex = Math.floor(Math.random() * n);
-                    if (stacks[stackIndex].length < 5) {
-                        stacks[stackIndex].push(color);
-                        placed = true;
-                    }
-                    attempts++;
-                }
-            });
-            renderStacks();
-        }
-
-        function selectStack(index) {
-            if (selectedStack === null) {
-                if (stacks[index].length > 0) {
-                    selectedStack = index;
-                }
-            } else {
-                moveItem(selectedStack, index);
-                selectedStack = null;
-            }
-            renderStacks();
-        }
-
-        function moveItem(from, to) {
-            if (from === to || stacks[from].length === 0 || stacks[to].length >= 5) return;
-
-            let color = stacks[from][stacks[from].length - 1];
-            if (stacks[to].length > 0 && stacks[to][stacks[to].length - 1] !== color) return;
-
-            let movableItems = [];
-            while (stacks[from].length > 0 && stacks[from][stacks[from].length - 1] === color) {
-                movableItems.push(stacks[from].pop());
+            .container {
+                display: flex;
+                justify-content: center;
+                gap: 20px;
+                margin-top: 20px;
             }
 
-            let spaceLeft = 5 - stacks[to].length;
-            while (movableItems.length > spaceLeft) {
-                stacks[from].push(movableItems.pop());
+            .stack {
+                width: 60px;
+                height: 200px;
+                border: 2px solid black;
+                display: flex;
+                flex-direction: column-reverse;
+                cursor: pointer;
             }
 
-            while (movableItems.length > 0) {
-                stacks[to].push(movableItems.pop());
+            .stack.selected {
+                border: 2px solid red;
             }
 
-            renderStacks();
-        }
-
-        function combineItems() {
-            stacks.forEach((stack, index) => {
-                if (stack.length === 5 && new Set(stack).size === 1) {
-                    stacks[index] = [];
-                    updateScore(10);
-                }
-            });
-            renderStacks();
-        }
-
-
-        function sortStacks() {
-            if (window.confirm('스택을 정렬하시겠습니까?\n\n이 기능은 뒤주(Softlock) 발생 시 사용하는 기능으로, 스택이 꽉 차여있음에도 합성할 수 있는 스택이 없을 때 사용합니다.\n\n주의: 일부 아이템 사라질 수 있습니다.\n\n** 사용 시 점수 30이 차감됩니다. **')) {
-                let allItems = stacks.flat();
-                let groupedItems = {};
-                colors.forEach(color => groupedItems[color] = []);
-
-                allItems.forEach(color => groupedItems[color].push(color));
-
-                let sortedColors = Object.values(groupedItems).filter(group => group.length > 0);
-                stacks = Array.from({ length: n }, () => []);
-
-                let index = 0;
-                sortedColors.forEach(group => {
-                    while (group.length > 0 && index < n) {
-                        let amount = Math.min(group.length, 5);
-                        stacks[index] = group.splice(0, amount);
-                        index++;
-                    }
-                });
-
-                updateScore(-30)
-
-                renderStacks();
+            .item {
+                width: 100%;
+                height: 20%;
+                border: 1px solid gray;
             }
-        }
 
-        function resetGame() {
-            if (window.confirm('리셋하시겠습니까?')) {
-                stacks = Array.from({ length: n }, () => []);
-                score = 0
-                updateScore()
-                renderStacks();
+            button {
+                margin-top: 10px;
+                padding: 10px;
+                cursor: pointer;
             }
-        }
 
-        function handleCommand(event) {
-            if (event.key === 'Enter') {
-                const command = event.target.value.trim();
-                event.target.value = '';
-                executeCommand(command);
+            #score {
+                font-size: 20px;
+                margin-top: 10px;
             }
-        }
+        </style>
+    </head>
 
-        function executeCommand(command) {
-            const parts = command.split(" ");
-            const action = parts[0];
+    <body>
+        <div id="score">점수: 0</div>
+        <button id="addBtn" onclick="addItems()">추가</button>
+        <button id="combineBtn" onclick="combineItems()">합성</button>
+        <button id="sortBtn" onclick="sortStacks()">정렬</button>
+        <button id="resetBtn" onclick="resetGame()">초기화</button>
 
-            if (action === "add" || action === "a") {
-                addItems();
-            } else if ((action === "move" || action === "m") && parts.length === 3) {
-                const from = parseInt(parts[1]) - 1;
-                const to = parseInt(parts[2]) - 1;
-                if (!isNaN(from) && !isNaN(to)) {
-                    selectStack(from);
-                    selectStack(to);
-                }
-            } else if (action === "combine" || action === "c") {
-                combineItems();
-            } else if (action === "sort" || action === "s") {
-                sortStacks();
-            } else if (action === "reset" || action === "r") {
-                resetGame();
-            } else {
-                alert('잘못된 명령어입니다')   
-            }
-        }
+        <div class="container" id="gameBoard"></div>
 
-        renderStacks();
-    </script>
-</body>
+        <input
+            type="text"
+            id="commandInput"
+            placeholder="명령어 입력 후 Enter"
+            onkeypress="handleCommand(event)"
+        />
+
+        <script src="index.js"></script>
+    </body>
 </html>
